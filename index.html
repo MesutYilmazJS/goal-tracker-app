@@ -9,11 +9,15 @@
 </head>
 
 <body>
-
+   
     <div class="container">
         <!-- Form Alanı -->
         <div class="form-container">
-            <h1>Hedef Takip Paneli</h1>
+            <header>
+                <h1>Hedef Takip Paneli</h1>
+                <button id="theme-toggle" class="theme-toggle">🌙 Karanlık Mod</button>
+              </header>
+            
             <form id="goal-form">
                 <label for="goal-title">Hedef Başlığı:</label>
                 <input type="text" id="goal-title" required>
@@ -42,10 +46,19 @@
 
                 <button type="submit">Hedef Ekle</button>
             </form>
-
+            <section id="stats-panel" class="stats-panel">
+                <h2>İstatistikler</h2>
+                <ul>
+                  <li>Toplam Hedef: <span id="total-count">0</span></li>
+                  <li>Tamamlanan: <span id="completed-count">0</span></li>
+                  <li>Tamamlanma Oranı: <span id="completion-rate">0%</span></li>
+                  <li>En Çok Kullanılan Kategori: <span id="top-category">-</span></li> 
+                  <div class="progress-container">
+                    <div id="progress-bar" class="progress-bar"></div>
+                  </div>
+              </section>
 
         </div>
-
         <!-- Hedefler Listeleme Alanı -->
         <div class="goal-list-container">
             <div class="filter-container">
