@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Goal Tracker</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <div class="container">
+        <!-- Form Alanı -->
+        <div class="form-container">
+            <h1>Hedef Takip Paneli</h1>
+            <form id="goal-form">
+                <label for="goal-title">Hedef Başlığı:</label>
+                <input type="text" id="goal-title" required>
+
+                <label for="goal-desc">Açıklama:</label>
+                <input type="text" id="goal-desc">
+
+                <label for="goal-deadline">Bitiş Tarihi:</label>
+                <input type="date" id="goal-deadline" required>
+
+                <label for="goal-priority">Öncelik:</label>
+                <select id="goal-priority" required>
+                    <option value="low">Düşük</option>
+                    <option value="medium">Orta</option>
+                    <option value="high">Yüksek</option>
+                </select>
+
+                <label for="goal-category">Kategori:</label>
+                <select id="goal-category" required>
+                    <option value="personal">Kişisel</option>
+                    <option value="work">İş</option>
+                    <option value="fitness">Fitness</option>
+                    <option value="study">Çalışma</option>
+                    <option value="other">Diğer</option>
+                </select>
+
+                <button type="submit">Hedef Ekle</button>
+            </form>
+
+
+        </div>
+
+        <!-- Hedefler Listeleme Alanı -->
+        <div class="goal-list-container">
+            <div class="filter-container">
+                <label for="category-filter">Kategoriye Göre Filtrele:</label>
+                <select id="category-filter">
+                    <option value="all">Tümü</option>
+                    <option value="personal">Kişisel</option>
+                    <option value="work">İş</option>
+                    <option value="fitness">Fitness</option>
+                    <option value="study">Çalışma</option>
+                    <option value="other">Diğer</option>
+                </select>
+            </div>
+            <button id="sort-date-btn" class="btn">Tarihe Göre Sırala</button>
+            <div id="goal-list"></div>
+
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
