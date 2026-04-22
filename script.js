@@ -4,35 +4,76 @@ class GoalTracker {
         this.titleInput = this.form.querySelector('#goal-title');
         this.descInput = this.form.querySelector('#goal-desc');
         this.deadlineInput = this.form.querySelector('#goal-deadline');
-        this.goalsList = document.querySelector(goalsListSelector);
+        this.priorityInput = this.form.querySelector('#goal-priority');
+        this.categoryInput = this.form.querySelector('#goal-category');
+        this.customCategoryInput = this.form.querySelector('#custom-category');
+        this.addCategoryButton = this.form.querySelector('#add-category-btn');
+        this.categoryPillList = this.form.querySelector('#category-pill-list');
+        this.goalList = document.querySelector(goalsListSelector);
         this.sortButton = document.querySelector(sortButtonSelector);
-        this.goalList = document.getElementById('goal-list');
+        this.categoryFilter = document.getElementById('category-filter');
+        this.modal = document.getElementById('goal-modal');
+        this.openModalButton = document.getElementById('open-goal-modal');
+        this.closeModalButton = document.getElementById('close-goal-modal');
+
+        this.defaultCategories = {
+            personal: 'Kişisel',
+            work: 'İş',
+            fitness: 'Fitness',
+            study: 'Çalışma',
+            other: 'Diğer',
+        };
+
+        this.categories = this.loadCategoriesFromStorage();
+
+        this.priorityLabels = {
+            low: 'Düşük Öncelik',
+            medium: 'Orta Öncelik',
+            high: 'Yüksek Öncelik',
+        };
 
         this.goals = this.loadGoalsFromStorage();
-        this.filter = 'all';  // 'all', 'completed', 'pending'
-        document.getElementById('category-filter').addEventListener('change', () => {
-            this.filterGoals();
-        });
 
+        this.populateCategoryOptions();
+        this.renderCategoryPills();
         this.addEventListeners();
         this.renderGoals();
     }
 
-    // LocalStorage'dan hedefleri al
-    loadGoalsFromStorage() {
-        const storedGoals = JSON.parse(localStorage.getItem('goals'));
-        return storedGoals ? storedGoals : [];
+    loadCategoriesFromStorage() {
+        const storedCategories = JSON.parse(localStorage.getItem('goalCategories')) || {};
+        return { ...this.defaultCategories, ...storedCategories };
     }
 
-    // LocalStorage'a hedefleri kaydet
+    loadGoalsFromStorage() {
+        const storedGoals = JSON.parse(localStorage.getItem('goals')) || [];
+
+        return storedGoals.map((goal, index) => ({
+            id: goal.id || `goal-${Date.now()}-${index}`,
+            title: goal.title || '',
+            desc: goal.desc || '',
+            deadline: goal.deadline || '',
+            priority: goal.priority || 'medium',
+            category: goal.category || 'other',
+            completed: Boolean(goal.completed),
+        }));
+    }
+
     saveGoalsToStorage() {
         localStorage.setItem('goals', JSON.stringify(this.goals));
     }
 
-    // Event listener'ları ekle
+    saveCategoriesToStorage() {
+        const customCategories = Object.fromEntries(
+            Object.entries(this.categories).filter(([key]) => !(key in this.defaultCategories))
+        );
+
+        localStorage.setItem('goalCategories', JSON.stringify(customCategories));
+    }
+
     addEventListeners() {
-        this.form.addEventListener('submit', (e) => {
-            e.preventDefault();
+        this.form.addEventListener('submit', (event) => {
+            event.preventDefault();
             this.addGoal();
         });
 
@@ -41,122 +82,268 @@ class GoalTracker {
             this.renderGoals();
         });
 
-        const filterButtons = document.querySelectorAll('.filter-button');
-        filterButtons.forEach(button => {
-            button.addEventListener('click', (e) => {
-                this.filter = e.target.dataset.filter;
-                this.renderGoals();
-            });
+        this.categoryFilter.addEventListener('change', () => {
+            this.renderGoals();
+        });
+
+        this.openModalButton.addEventListener('click', () => {
+            this.openModal();
+        });
+
+        this.closeModalButton.addEventListener('click', () => {
+            this.closeModal();
+        });
+
+        this.modal.addEventListener('click', (event) => {
+            if (event.target.hasAttribute('data-close-modal')) {
+                this.closeModal();
+            }
+        });
+
+        this.addCategoryButton.addEventListener('click', () => {
+            this.addCategory();
+        });
+
+        this.customCategoryInput.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                this.addCategory();
+            }
+        });
+
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape' && this.modal.classList.contains('is-open')) {
+                this.closeModal();
+            }
         });
     }
 
-    // Hedef ekleme
     addGoal() {
         const goal = {
-            title: this.titleInput.value,
-            desc: this.descInput.value,
+            id: `goal-${Date.now()}`,
+            title: this.titleInput.value.trim(),
+            desc: this.descInput.value.trim(),
             deadline: this.deadlineInput.value,
-            priority: this.form.querySelector('#goal-priority').value,
-            category: this.form.querySelector('#goal-category').value,  // Kategori
+            priority: this.priorityInput.value,
+            category: this.categoryInput.value,
             completed: false,
-            completion: 0,
         };
 
-        this.goals.push(goal);
+        this.goals.unshift(goal);
         this.saveGoalsToStorage();
-        this.renderGoals();
         this.clearForm();
+        this.renderGoals();
+        this.closeModal();
     }
 
+    openModal() {
+        this.modal.classList.add('is-open');
+        this.modal.setAttribute('aria-hidden', 'false');
+        document.body.classList.add('modal-open');
+        requestAnimationFrame(() => this.titleInput.focus());
+    }
 
-    // Hedefi tamamlandı olarak işaretle
-    toggleCompletion(index) {
-        this.goals[index].completed = !this.goals[index].completed;
-        this.goals[index].completion = this.goals[index].completed ? 100 : 0; // Eğer tamamlandıysa %100, değilse %0
+    closeModal() {
+        this.modal.classList.remove('is-open');
+        this.modal.setAttribute('aria-hidden', 'true');
+        document.body.classList.remove('modal-open');
+        this.openModalButton.focus();
+    }
+
+    toggleCompletion(goalId) {
+        this.goals = this.goals.map((goal) => (
+            goal.id === goalId
+                ? { ...goal, completed: !goal.completed }
+                : goal
+        ));
+
         this.saveGoalsToStorage();
         this.renderGoals();
     }
 
-    // Hedefi sil
-    deleteGoal(index) {
-        this.goals.splice(index, 1);
+    deleteGoal(goalId) {
+        this.goals = this.goals.filter((goal) => goal.id !== goalId);
         this.saveGoalsToStorage();
         this.renderGoals();
     }
 
-    // Hedefi filtrele
-    getFilteredGoals() {
-        if (this.filter === 'completed') {
-            return this.goals.filter(goal => goal.completed);
-        } else if (this.filter === 'pending') {
-            return this.goals.filter(goal => !goal.completed);
-        }
-        return this.goals; // 'all'
-    }
-
-    // Tarihe göre sıralama (en erken tarihten en geç tarihe)
     sortGoalsByDate() {
-        this.goals.sort((a, b) => new Date(a.deadline) - new Date(b.deadline));
+        this.goals.sort((firstGoal, secondGoal) => new Date(firstGoal.deadline) - new Date(secondGoal.deadline));
     }
+
+    normalizeCategoryKey(value) {
+        return value
+            .trim()
+            .toLocaleLowerCase('tr-TR')
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .replace(/[^a-z0-9]+/g, '-')
+            .replace(/^-+|-+$/g, '');
+    }
+
+    addCategory() {
+        const label = this.customCategoryInput.value.trim();
+
+        if (!label) {
+            return;
+        }
+
+        const key = this.normalizeCategoryKey(label);
+
+        if (!key) {
+            this.customCategoryInput.value = '';
+            return;
+        }
+
+        this.categories[key] = label;
+        this.saveCategoriesToStorage();
+        this.populateCategoryOptions();
+        this.renderCategoryPills();
+
+        this.categoryInput.value = key;
+        this.categoryFilter.value = 'all';
+        this.customCategoryInput.value = '';
+    }
+
+    populateCategoryOptions() {
+        const categoryOptions = Object.entries(this.categories);
+
+        this.categoryInput.innerHTML = categoryOptions
+            .map(([key, label]) => `<option value="${key}">${label}</option>`)
+            .join('');
+
+        this.categoryFilter.innerHTML = `
+            <option value="all">Tümü</option>
+            ${categoryOptions.map(([key, label]) => `<option value="${key}">${label}</option>`).join('')}
+        `;
+    }
+
+    renderCategoryPills() {
+        this.categoryPillList.innerHTML = Object.values(this.categories)
+            .map((label) => `<span class="category-pill">${label}</span>`)
+            .join('');
+    }
+
+    getFilteredGoals() {
+        const selectedCategory = this.categoryFilter.value;
+
+        if (selectedCategory === 'all') {
+            return this.goals;
+        }
+
+        return this.goals.filter((goal) => goal.category === selectedCategory);
+    }
+
     calculateDaysLeft(deadline) {
-        const today = new Date();  // Bugünün tarihi
-        const deadlineDate = new Date(deadline);  // Hedefin bitiş tarihi
-        const timeDifference = deadlineDate - today;  // Zaman farkı (milisaniye)
-        const daysLeft = Math.ceil(timeDifference / (1000 * 3600 * 24));  // Gün cinsinden fark
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
 
-        return daysLeft;
+        const deadlineDate = new Date(deadline);
+        deadlineDate.setHours(0, 0, 0, 0);
+
+        return Math.ceil((deadlineDate - today) / (1000 * 60 * 60 * 24));
     }
-    // Hedef kartını oluştur
-    createGoalCard(goal, index) {
-        const card = document.createElement('div');
-        card.className = 'goal-card';
-        card.classList.add(goal.category); // Renk için
 
-        // Kategori etiketi
-        const categoryBadge = document.createElement('div');
-        categoryBadge.className = 'category-badge';
-        categoryBadge.textContent = goal.category.charAt(0).toUpperCase() + goal.category.slice(1);
+    formatDate(deadline) {
+        const date = new Date(deadline);
+        return new Intl.DateTimeFormat('tr-TR', {
+            day: '2-digit',
+            month: 'long',
+            year: 'numeric',
+        }).format(date);
+    }
 
-        // Kartın içine bu etiketi ekliyoruz
-        card.appendChild(categoryBadge);
-        card.className = 'goal-card';
+    getDeadlineLabel(deadline) {
+        const daysLeft = this.calculateDaysLeft(deadline);
 
-        // Kategoriye göre renk sınıfı ekle
-        card.classList.add(goal.category);
+        if (daysLeft < 0) {
+            return `${Math.abs(daysLeft)} gün gecikti`;
+        }
+
+        if (daysLeft === 0) {
+            return 'Bugün tamamlanmalı';
+        }
+
+        if (daysLeft === 1) {
+            return '1 gün kaldı';
+        }
+
+        return `${daysLeft} gün kaldı`;
+    }
+
+    createGoalCard(goal) {
+        const card = document.createElement('article');
+        card.className = `goal-card ${goal.category} ${goal.priority}-priority`;
+
+        if (goal.completed) {
+            card.classList.add('completed');
+        }
 
         const info = document.createElement('div');
         info.className = 'goal-info';
 
-        const title = document.createElement('div');
+        const header = document.createElement('div');
+        header.className = 'goal-card-header';
+
+        const textBlock = document.createElement('div');
+
+        const title = document.createElement('h3');
         title.className = 'goal-title';
         title.textContent = goal.title;
 
         const deadline = document.createElement('div');
         deadline.className = 'goal-deadline';
-        const daysLeft = this.calculateDaysLeft(goal.deadline);
-        deadline.textContent = `Tamamlanması gereken: ${goal.deadline} (${daysLeft} gün kaldı)`;
+        deadline.textContent = `${this.formatDate(goal.deadline)} • ${this.getDeadlineLabel(goal.deadline)}`;
 
         const desc = document.createElement('div');
         desc.className = 'goal-desc';
-        desc.textContent = goal.desc || '';
+        desc.textContent = goal.desc || 'Bu hedef için açıklama eklenmedi.';
 
-        info.appendChild(title);
-        info.appendChild(deadline);
-        info.appendChild(desc);
+        textBlock.appendChild(title);
+        textBlock.appendChild(deadline);
+
+        const status = document.createElement('span');
+        status.className = 'meta-pill status-pill';
+        status.textContent = goal.completed ? 'Tamamlandı' : 'Devam Ediyor';
+
+        header.appendChild(textBlock);
+        header.appendChild(status);
+
+        const meta = document.createElement('div');
+        meta.className = 'goal-meta';
+
+        const categoryBadge = document.createElement('span');
+        categoryBadge.className = 'meta-pill category-badge';
+        categoryBadge.textContent = this.categories[goal.category] || 'Diğer';
+
+        const priorityBadge = document.createElement('span');
+        priorityBadge.className = `meta-pill priority-badge ${goal.priority}`;
+        priorityBadge.textContent = this.priorityLabels[goal.priority] || 'Orta Öncelik';
+
+        meta.appendChild(categoryBadge);
+        meta.appendChild(priorityBadge);
 
         const actions = document.createElement('div');
         actions.className = 'goal-actions';
 
         const completeBtn = document.createElement('button');
-        completeBtn.textContent = goal.completed ? '✓ Tamamlandı' : '✓ Tamamla';
-        completeBtn.onclick = () => this.toggleCompletion(index);
+        completeBtn.className = 'complete-btn';
+        completeBtn.type = 'button';
+        completeBtn.textContent = goal.completed ? 'Tamamlanmadı Olarak İşaretle' : 'Tamamlandı Olarak İşaretle';
+        completeBtn.addEventListener('click', () => this.toggleCompletion(goal.id));
 
         const deleteBtn = document.createElement('button');
-        deleteBtn.textContent = '🗑 Sil';
-        deleteBtn.onclick = () => this.deleteGoal(index);
+        deleteBtn.className = 'delete-btn';
+        deleteBtn.type = 'button';
+        deleteBtn.textContent = 'Hedefi Sil';
+        deleteBtn.addEventListener('click', () => this.deleteGoal(goal.id));
 
         actions.appendChild(completeBtn);
         actions.appendChild(deleteBtn);
+
+        info.appendChild(header);
+        info.appendChild(desc);
+        info.appendChild(meta);
 
         card.appendChild(info);
         card.appendChild(actions);
@@ -164,100 +351,87 @@ class GoalTracker {
         return card;
     }
 
+    renderGoals() {
+        const filteredGoals = this.getFilteredGoals();
+        this.goalList.innerHTML = '';
 
-
-
-    filterGoals() {
-        const selectedCategory = document.getElementById('category-filter').value;
-
-        let filteredGoals = this.goals;
-
-        // Eğer kategori "Tümü" seçilmemişse, o kategoriye göre filtrele
-        if (selectedCategory !== 'all') {
-            filteredGoals = this.goals.filter(goal => goal.category === selectedCategory);
-        }
-
-        this.renderGoals(filteredGoals);
-    }
-
-    renderGoals(filteredGoals = this.goals) {
-        this.goalList.innerHTML = ''; // Önceki listeleri temizle
-        if (filteredGoals.length > 0) {
-            filteredGoals.forEach((goal, index) => {
-                const card = this.createGoalCard(goal, index);
-                this.goalList.appendChild(card);
-            });
-            this.updateStats(); // ← buraya ekle
-        } else {
+        if (filteredGoals.length === 0) {
             this.goalList.innerHTML = `
-                <div class="goal-card">
-                    <div class="goal-info">
-                        <div class="goal-title">Bulunamadı</div>    
-                    </div>
-                </div>`
+                <div class="empty-state">
+                    <h3 class="goal-title">Henüz hedef görünmüyor</h3>
+                    <p>Yeni bir hedef ekleyebilir ya da seçili filtreyi değiştirerek kayıtlı hedeflerine dönebilirsin.</p>
+                </div>
+            `;
+            this.updateStats();
+            return;
         }
 
+        filteredGoals.forEach((goal) => {
+            this.goalList.appendChild(this.createGoalCard(goal));
+        });
 
+        this.updateStats();
     }
 
-    // Formu temizle
     clearForm() {
-        this.titleInput.value = '';
-        this.descInput.value = '';
-        this.deadlineInput.value = '';
+        this.form.reset();
     }
 
     updateStats() {
         const total = this.goals.length;
-        const completed = this.goals.filter(goal => goal.completed).length;
+        const completed = this.goals.filter((goal) => goal.completed).length;
         const rate = total > 0 ? Math.round((completed / total) * 100) : 0;
-        document.getElementById('progress-bar').style.width = `${rate}%`;
+        const topCategory = this.getTopCategory();
 
         document.getElementById('total-count').textContent = total;
         document.getElementById('completed-count').textContent = completed;
         document.getElementById('completion-rate').textContent = `${rate}%`;
-        // Kategori frekanslarını say
-        const categoryCount = {};
-        this.goals.forEach(goal => {
-            categoryCount[goal.category] = (categoryCount[goal.category] || 0) + 1;
-        });
-
-        // En sık geçen kategoriyi bul
-        let topCategory = '-';
-        let max = 0;
-        for (let category in categoryCount) {
-            if (categoryCount[category] > max) {
-                topCategory = category;
-                max = categoryCount[category];
-            }
-        }
-
-        // DOM'a yaz
+        document.getElementById('completion-rate-badge').textContent = `${rate}%`;
         document.getElementById('top-category').textContent = topCategory;
-
+        document.getElementById('progress-text').textContent = `${completed} / ${total} tamamlandı`;
+        document.getElementById('progress-bar').style.width = `${rate}%`;
     }
 
+    getTopCategory() {
+        if (this.goals.length === 0) {
+            return '-';
+        }
+
+        const categoryCount = this.goals.reduce((accumulator, goal) => {
+            accumulator[goal.category] = (accumulator[goal.category] || 0) + 1;
+            return accumulator;
+        }, {});
+
+        const [topCategory] = Object.entries(categoryCount).sort((firstEntry, secondEntry) => secondEntry[1] - firstEntry[1])[0];
+
+        return this.categories[topCategory] || 'Diğer';
+    }
 }
 
-// Başlangıçta sınıfı başlatıyoruz
-const goalTracker = new GoalTracker('#goal-form', '#goals-list', '#sort-date-btn');
+const goalTracker = new GoalTracker('#goal-form', '#goal-list', '#sort-date-btn');
 const toggleButton = document.getElementById('theme-toggle');
+
+function syncThemeButton() {
+    const isDark = document.body.classList.contains('dark-mode');
+    toggleButton.textContent = isDark ? '☀️ Aydınlık Mod' : '🌙 Karanlık Mod';
+}
 
 toggleButton.addEventListener('click', () => {
     document.body.classList.toggle('dark-mode');
 
-    const isDark = document.body.classList.contains('dark-mode');
-    toggleButton.textContent = isDark ? '☀️ Aydınlık Mod' : '🌙 Karanlık Mod';
-
-    // Tercihi saklamak için (opsiyonel)
-    localStorage.setItem('theme', isDark ? 'dark' : 'light');
+    const theme = document.body.classList.contains('dark-mode') ? 'dark' : 'light';
+    localStorage.setItem('theme', theme);
+    syncThemeButton();
 });
 
-// Sayfa yüklendiğinde kullanıcının temasını yükle (opsiyonel)
 window.addEventListener('DOMContentLoaded', () => {
     const savedTheme = localStorage.getItem('theme');
-    if (savedTheme === 'dark') {
+
+    if (savedTheme === 'light') {
+        document.body.classList.remove('dark-mode');
+    } else {
         document.body.classList.add('dark-mode');
-        toggleButton.textContent = '☀️ Aydınlık Mod';
     }
+
+    syncThemeButton();
 });

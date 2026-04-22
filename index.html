@@ -1,80 +1,170 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="tr">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Goal Tracker</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 
-<body>
-   
-    <div class="container">
-        <!-- Form Alanı -->
-        <div class="form-container">
-            <header>
-                <h1>Hedef Takip Paneli</h1>
-                <button id="theme-toggle" class="theme-toggle">🌙 Karanlık Mod</button>
-              </header>
+<body class="dark-mode">
+    <div class="page-shell">
+        <main class="container">
             
-            <form id="goal-form">
-                <label for="goal-title">Hedef Başlığı:</label>
-                <input type="text" id="goal-title" required>
+            <section class="form-container panel">
+                <div class="panel-intro">
+                    <p class="eyebrow">Goal Tracker</p>
+                    <div class="panel-topbar">
+                        <div>
+                            <h1>Hedef Takip Paneli</h1>
+                            <p class="panel-copy">Kişisel, iş ve günlük hedeflerini tek ekranda düzenli bir şekilde takip et.</p>
+                        </div>
+                        <button id="theme-toggle" class="theme-toggle" type="button">🌙 Karanlık Mod</button>
+                    </div>
+                </div>
 
-                <label for="goal-desc">Açıklama:</label>
-                <input type="text" id="goal-desc">
+                <section id="stats-panel" class="stats-panel">
+                    <div class="section-heading">
+                        <div>
+                            <p class="eyebrow">İlerleme</p>
+                            <h2>Genel Durum</h2>
+                        </div>
+                        <span id="completion-rate-badge" class="stats-badge">0%</span>
+                    </div>
 
-                <label for="goal-deadline">Bitiş Tarihi:</label>
-                <input type="date" id="goal-deadline" required>
+                    <div class="stats-grid">
+                        <article class="stat-card">
+                            <span class="stat-label">Toplam Hedef</span>
+                            <strong id="total-count">0</strong>
+                        </article>
+                        <article class="stat-card">
+                            <span class="stat-label">Tamamlanan</span>
+                            <strong id="completed-count">0</strong>
+                        </article>
+                        <article class="stat-card">
+                            <span class="stat-label">Tamamlanma Oranı</span>
+                            <strong id="completion-rate">0%</strong>
+                        </article>
+                        <article class="stat-card">
+                            <span class="stat-label">Öne Çıkan Kategori</span>
+                            <strong id="top-category">-</strong>
+                        </article>
+                    </div>
 
-                <label for="goal-priority">Öncelik:</label>
-                <select id="goal-priority" required>
-                    <option value="low">Düşük</option>
-                    <option value="medium">Orta</option>
-                    <option value="high">Yüksek</option>
-                </select>
+                    <div class="progress-block">
+                        <div class="progress-copy">
+                            <span>İlerleme Çubuğu</span>
+                            <span id="progress-text">0 / 0 tamamlandı</span>
+                        </div>
+                        <div class="progress-container">
+                            <div id="progress-bar" class="progress-bar"></div>
+                        </div>
+                    </div>
 
-                <label for="goal-category">Kategori:</label>
-                <select id="goal-category" required>
-                    <option value="personal">Kişisel</option>
-                    <option value="work">İş</option>
-                    <option value="fitness">Fitness</option>
-                    <option value="study">Çalışma</option>
-                    <option value="other">Diğer</option>
-                </select>
+                    <div class="stats-actions">
+                        <button id="open-goal-modal" class="primary-btn" type="button">Yeni Hedef Ekle</button>
+                    </div>
+                </section>
+            </section>
 
-                <button type="submit">Hedef Ekle</button>
-            </form>
-            <section id="stats-panel" class="stats-panel">
-                <h2>İstatistikler</h2>
-                <ul>
-                  <li>Toplam Hedef: <span id="total-count">0</span></li>
-                  <li>Tamamlanan: <span id="completed-count">0</span></li>
-                  <li>Tamamlanma Oranı: <span id="completion-rate">0%</span></li>
-                  <li>En Çok Kullanılan Kategori: <span id="top-category">-</span></li> 
-                  <div class="progress-container">
-                    <div id="progress-bar" class="progress-bar"></div>
-                  </div>
-              </section>
+            <section class="goal-list-container panel">
+                <div class="list-header">
+                    <div>
+                        <p class="eyebrow">Planlama Alanı</p>
+                        <h2>Hedeflerin</h2>
+                        <p class="panel-copy">Kartlarını filtrele, tarihe göre sırala ve tek bakışta hangi hedefin önde olduğunu gör.</p>
+                    </div>
+                </div>
 
-        </div>
-        <!-- Hedefler Listeleme Alanı -->
-        <div class="goal-list-container">
-            <div class="filter-container">
-                <label for="category-filter">Kategoriye Göre Filtrele:</label>
-                <select id="category-filter">
-                    <option value="all">Tümü</option>
-                    <option value="personal">Kişisel</option>
-                    <option value="work">İş</option>
-                    <option value="fitness">Fitness</option>
-                    <option value="study">Çalışma</option>
-                    <option value="other">Diğer</option>
-                </select>
-            </div>
-            <button id="sort-date-btn" class="btn">Tarihe Göre Sırala</button>
-            <div id="goal-list"></div>
+                <div class="toolbar">
+                    <label class="field toolbar-field" for="category-filter">
+                        <span>Kategoriye Göre Filtrele</span>
+                        <select id="category-filter">
+                            <option value="all">Tümü</option>
+                            <option value="personal">Kişisel</option>
+                            <option value="work">İş</option>
+                            <option value="fitness">Fitness</option>
+                            <option value="study">Çalışma</option>
+                            <option value="other">Diğer</option>
+                        </select>
+                    </label>
 
+                    <button id="sort-date-btn" class="secondary-btn" type="button">Tarihe Göre Sırala</button>
+                </div>
+
+                <div id="goal-list" class="goal-list"></div>
+            </section>
+        </main>
+
+        <div id="goal-modal" class="modal" aria-hidden="true">
+            <div class="modal-backdrop" data-close-modal></div>
+
+            <section class="modal-card" role="dialog" aria-modal="true" aria-labelledby="goal-modal-title">
+                <button id="close-goal-modal" class="modal-close" type="button" aria-label="Modalı kapat">Kapat</button>
+
+                <div class="modal-header">
+                    <p class="eyebrow">Yeni Kayıt</p>
+                    <h2 id="goal-modal-title">Yeni Hedef Oluştur</h2>
+                    <p class="panel-copy">Hedef başlığını, bitiş tarihini ve kategorisini gir. İstersen yeni kategori de ekleyebilirsin.</p>
+                </div>
+
+                <form id="goal-form" class="form-card modal-form">
+                    <div class="form-grid">
+                        <label class="field field-full" for="goal-title">
+                            <span>Hedef Başlığı</span>
+                            <input type="text" id="goal-title" placeholder="Örn. Haftalık planı tamamla" required>
+                        </label>
+
+                        <label class="field field-full" for="goal-desc">
+                            <span>Açıklama</span>
+                            <input type="text" id="goal-desc" placeholder="Kısa bir not ekle">
+                        </label>
+
+                        <label class="field" for="goal-deadline">
+                            <span>Bitiş Tarihi</span>
+                            <input type="date" id="goal-deadline" required>
+                        </label>
+
+                        <label class="field" for="goal-priority">
+                            <span>Öncelik</span>
+                            <select id="goal-priority" required>
+                                <option value="low">Düşük</option>
+                                <option value="medium">Orta</option>
+                                <option value="high">Yüksek</option>
+                            </select>
+                        </label>
+
+                        <label class="field field-full" for="goal-category">
+                            <span>Kategori</span>
+                            <select id="goal-category" required>
+                                <option value="personal">Kişisel</option>
+                                <option value="work">İş</option>
+                                <option value="fitness">Fitness</option>
+                                <option value="study">Çalışma</option>
+                                <option value="other">Diğer</option>
+                            </select>
+                        </label>
+
+                        <div class="field field-full">
+                            <span>Yeni Kategori Ekle</span>
+                            <div class="category-create">
+                                <input type="text" id="custom-category" placeholder="Örn. Finans veya Hobiler">
+                                <button type="button" id="add-category-btn" class="secondary-btn">Kategori Ekle</button>
+                            </div>
+                            <p class="helper-text">Eklediğin kategoriler seçim ve filtre alanlarına otomatik olarak eklenir.</p>
+                            <div id="category-pill-list" class="category-pill-list"></div>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="primary-btn">Hedef Ekle</button>
+                </form>
+            </section>
         </div>
     </div>
 
