@@ -41,12 +41,76 @@ class GoalTracker {
     }
 
     loadCategoriesFromStorage() {
-        const storedCategories = JSON.parse(localStorage.getItem('goalCategories')) || {};
+        let storedCategories = JSON.parse(localStorage.getItem('goalCategories'));
+        
+        if (!storedCategories && !localStorage.getItem('goals')) {
+            // Eğer hem hedefler hem kategoriler boşsa, örnek bir kategori ekleyelim
+            storedCategories = { 'seyahat': 'Seyahat' };
+            localStorage.setItem('goalCategories', JSON.stringify(storedCategories));
+        } else if (!storedCategories) {
+            storedCategories = {};
+        }
+
         return { ...this.defaultCategories, ...storedCategories };
     }
 
     loadGoalsFromStorage() {
-        const storedGoals = JSON.parse(localStorage.getItem('goals')) || [];
+        const storedGoals = JSON.parse(localStorage.getItem('goals'));
+
+        if (!storedGoals || storedGoals.length === 0) {
+            const today = new Date();
+            const dummyGoals = [
+                {
+                    id: `goal-dummy-1`,
+                    title: 'Sabah Yürüyüşü',
+                    desc: 'Hafta içi her gün en az 30 dakika tempolu yürüyüş yap.',
+                    deadline: new Date(today.getTime() + 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+                    priority: 'medium',
+                    category: 'fitness',
+                    completed: false,
+                },
+                {
+                    id: `goal-dummy-2`,
+                    title: 'Proje Sunumu Hazırla',
+                    desc: 'Yıl sonu toplantısı için gerekli sunum slaytlarını ve grafiklerini tamamla.',
+                    deadline: new Date(today.getTime() + 1 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+                    priority: 'high',
+                    category: 'work',
+                    completed: false,
+                },
+                {
+                    id: `goal-dummy-3`,
+                    title: 'Kitap Okuma',
+                    desc: 'Bu ayın kitabı olan "Atomik Alışkanlıklar"dan her gün 20 sayfa oku.',
+                    deadline: new Date(today.getTime() + 10 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+                    priority: 'low',
+                    category: 'study',
+                    completed: true,
+                },
+                {
+                    id: `goal-dummy-4`,
+                    title: 'Yeni Dil Öğrenimi',
+                    desc: 'Günde 15 dakika Duolingo üzerinden İspanyolca pratik yap.',
+                    deadline: new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+                    priority: 'medium',
+                    category: 'personal',
+                    completed: false,
+                },
+                {
+                    id: `goal-dummy-5`,
+                    title: 'Yaz Tatili Planı',
+                    desc: 'Haziran ayı için uçak bileti ve otel rezervasyonlarını kontrol et.',
+                    deadline: new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+                    priority: 'low',
+                    category: 'seyahat',
+                    completed: false,
+                }
+            ];
+            
+            // İlk açılışta veriyi kaydetmek isteyebiliriz
+            localStorage.setItem('goals', JSON.stringify(dummyGoals));
+            return dummyGoals;
+        }
 
         return storedGoals.map((goal, index) => ({
             id: goal.id || `goal-${Date.now()}-${index}`,
