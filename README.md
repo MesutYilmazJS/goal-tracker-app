@@ -1,5 +1,5 @@
-# Goal Tracker App - DEMO : https://mesutyilmazjs.github.io/goal-tracker-app/
-
+# Goal Tracker App
+ DEMO : https://mesutyilmazjs.github.io/goal-tracker-app/
 Basit, hızlı ve görsel olarak düzenlenmiş bir hedef takip uygulaması. Kullanıcılar hedef ekleyebilir, kategorilere ayırabilir, tamamlanma durumunu takip edebilir ve ilerleme özetini tek ekranda görebilir.
 
 ## Özellikler
